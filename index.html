@@ -43,6 +43,9 @@
       var input = document.getElementById('input');
       const constraints = {
         video: {
+          frameRate: {
+            ideal: 10, max: 15
+          },
           width: {
             min: 640,
             ideal: 1920,
@@ -66,13 +69,36 @@
       
 
       const videoStream = async() => {
-        const src = await navigator.mediaDevices.getUserMedia(constraints);   
-        socket.emit('video', src);
-        if(src.active){
-          video.srcObject = src;
-          console.log(video.srcObject);
-          video.play();
+        const src = await navigator.mediaDevices.getUserMedia(constraints);  
+        
+        const data = [];
+
+        const mediaRecorder =  new MediaRecorder(src)
+        mediaRecorder.start(200)
+
+       
+        mediaRecorder.ondataavailable = (e) =>{
+          data.push(e.data)
+          // console.log('data', data);
+          socket.emit('video', data);
+          const blob = new Blob(data, {'type': 'video'})
+         const boo = window.URL.createObjectURL(blob)
+         console.log(boo);
+         video.src = boo;
         }
+        
+
+        
+    
+        video.onloadedmetadata = (e) => {
+          video.play()
+        }
+
+        // const track = stream.getTracks()
+        // console.log(stream.getTracks()); 
+        // video.srcObject = src;
+        // console.log(stream);
+        socket.emit('video', data);
       }
        videoStream()
      
@@ -85,11 +111,21 @@
 
       div.appendChild(video2)
 
-     
+     const otherData =[]
+
       socket.on('send video', (src) => {
-        video2.srcObject = src;
+        otherData.push(src)
+        const blob = new Blob(src, {'type': 'video'})
+        const boo = window.URL.createObjectURL(blob)
+        video2.src = boo;
+        
         video2.play()
       })
+
+      console.log(otherData);
+      
+
+      
 
       form.addEventListener('submit', function(e) {
         e.preventDefault();
