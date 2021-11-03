@@ -42,13 +42,18 @@ if(cluster.isMaster){
   setupWorker(io);
 
   io.on('connection', (socket) => {
-    console.log('connected to socket');
     
+    console.log('connected to socket');
+    const response = `Welcome ${socket.id}`
+    socket.emit('welcome', response)
+
     socket.on('chat message', msg => {
-      console.log('goteeem');
         io.emit('chat message', msg);
-        // socket.broadcast.emit('SOMONE SAID: ', msg);
       });
+
+    socket.on('video', src => {
+      io.emit('send video', src)
+    })
   })
 
 }

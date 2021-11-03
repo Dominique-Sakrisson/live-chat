@@ -10,42 +10,93 @@
       #input:focus { outline: none; }
       #form > button { background: #333; border: none; padding: 1rem 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
 
-      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages { width: 65%; list-style-type: none; margin: 0; padding: 0; overflow-y: scroll; max-height:400px; }
       #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
+      #messages > li:nth-child(odd) { background: rgba(141, 139, 139, 0.137); }
+      #messages > li:nth-child(even) { background: rgba(239,239,239, .2); }
     </style>
     
   </head>
   <body>
+    <div id='div'></div>
+    <h2 id='welcome'></h2>
     <ul id="messages"></ul>
+    <!-- <video  id="video"></video> -->
     <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
+      <input id="input" autocomplete="off" />
+      <button>Send</button>
+      <button>Video</button>
     </form>
   </body>
   <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
 
-var messages = document.getElementById('messages');
-var form = document.getElementById('form');
-var input = document.getElementById('input');
+      var body = document.getElementById('div');
+      var welcome = document.getElementById('welcome');
+      var messages = document.getElementById('messages');
+      var form = document.getElementById('form');
+      var input = document.getElementById('input');
+      const constraints = {
+        video: {
+          width: {
+            min: 640,
+            ideal: 1920,
+            max: 2560,
+          },
+          height: {
+            min: 720,
+            ideal: 1080,
+            max: 1440,
+          },
+        },
+      }
+      const video = document.createElement('VIDEO')
+      video.style.position = 'fixed';
+      video.style.zIndex = -1;
+      video.style.width = '200px';
+      video.style.top = '150px';
+      video.style.right = '0px';
 
+      div.appendChild(video)
+
+      const videoStream = async(vid) => {
+        const src= await navigator.mediaDevices.getUserMedia(constraints);
+        vid.srcObject = src;
+        socket.emit('video', src);
+        vid.play();
+      }
+      videoStream(video)
+      const video2 = document.createElement('VIDEO')
+      video2.style.position = 'fixed';
+      video2.style.zIndex = -1;
+      video2.style.width = '200px';
+      video2.style.top = '300px';
+      video2.style.right = '0px';
+      div.appendChild(video2)
+
+      socket.on('send video', src => {
+        videoStream(video2)
+      })
 form.addEventListener('submit', function(e) {
   e.preventDefault();
-  console.log('heyy');
+  
   if (input.value) {
-    console.log('value pass', input.value);
+    
     socket.emit('chat message', input.value);
     input.value = '';
   }
 });
 
 socket.on('chat message', function(msg) {
-  console.log('umm');
   var item = document.createElement('li');
   item.textContent = msg;
   messages.appendChild(item);
   window.scrollTo(0, document.body.scrollHeight);
 });
+
+socket.on('welcome', function(msg) {
+  welcome.textContent= msg;
+})
     </script>
 </html>
