@@ -18,7 +18,10 @@
     
   </head>
   <body>
-    <div id='div'></div>
+    <div id='div'>
+
+      <canvas style="display:none;" id="preview"></canvas>
+    </div>
     <h2 id='welcome'></h2>
     <ul id="messages"></ul>
     <!-- <video  id="video"></video> -->
@@ -60,17 +63,19 @@
       video.style.right = '0px';
 
       div.appendChild(video)
+      
 
       const videoStream = async() => {
-        const src= await navigator.mediaDevices.getUserMedia(constraints);   
+        const src = await navigator.mediaDevices.getUserMedia(constraints);   
+        socket.emit('video', src);
         if(src.active){
           video.srcObject = src;
-          socket.emit('video', src);
+          console.log(video.srcObject);
           video.play();
         }
       }
-      videoStream()
-      
+       videoStream()
+     
       const video2 = document.createElement('VIDEO')
       video2.style.position = 'fixed';
       video2.style.zIndex = -1;
@@ -80,16 +85,12 @@
 
       div.appendChild(video2)
 
-      const videoStream2 = () => {
-          
-          video2.play();
-        
-      }
-      
+     
       socket.on('send video', (src) => {
-        console.log(src);
-        videoStream2(src)
+        video2.srcObject = src;
+        video2.play()
       })
+
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         

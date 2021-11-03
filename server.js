@@ -54,7 +54,7 @@ if(cluster.isMaster){
 
     socket.on('video', (src) => {
       console.log(src);
-      socket.broadcast.emit('send video', src)
+      socket.emit('send video', src)
     })
   })
 
