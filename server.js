@@ -44,15 +44,17 @@ if(cluster.isMaster){
   io.on('connection', (socket) => {
     socket.join('video')
     console.log('connected to socket');
+
     const response = `Welcome ${socket.id}`
     socket.emit('welcome', response)
 
     socket.on('chat message', msg => {
-        io.emit('chat message', msg);
-      });
+      io.emit('chat message', msg);
+    });
 
-    socket.on('video', src => {
-      io.emit('send video', src)
+    socket.on('video', (src) => {
+      console.log(src);
+      socket.broadcast.emit('send video', src)
     })
   })
 

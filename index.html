@@ -31,6 +31,7 @@
   <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
+      
 
       var body = document.getElementById('div');
       var welcome = document.getElementById('welcome');
@@ -60,32 +61,43 @@
 
       div.appendChild(video)
 
-      const videoStream = async(vid) => {
-        const src= await navigator.mediaDevices.getUserMedia(constraints);
-        vid.srcObject = src;
-        socket.emit('video', src);
-        vid.play();
+      const videoStream = async() => {
+        const src= await navigator.mediaDevices.getUserMedia(constraints);   
+        if(src.active){
+          video.srcObject = src;
+          socket.emit('video', src);
+          video.play();
+        }
       }
-      videoStream(video)
+      videoStream()
+      
       const video2 = document.createElement('VIDEO')
       video2.style.position = 'fixed';
       video2.style.zIndex = -1;
       video2.style.width = '200px';
-      video2.style.top = '300px';
+      video2.style.top = '350px';
       video2.style.right = '0px';
+
       div.appendChild(video2)
 
-      socket.on('send video', src => {
-        videoStream(video2)
+      const videoStream2 = () => {
+          
+          video2.play();
+        
+      }
+      
+      socket.on('send video', (src) => {
+        console.log(src);
+        videoStream2(src)
       })
-form.addEventListener('submit', function(e) {
-  e.preventDefault();
-  
-  if (input.value) {
-    
-    socket.emit('chat message', input.value);
-    input.value = '';
-  }
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (input.value) {
+          
+          socket.emit('chat message', input.value);
+          input.value = '';
+        }
 });
 
 socket.on('chat message', function(msg) {
