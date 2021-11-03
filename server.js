@@ -42,7 +42,7 @@ if(cluster.isMaster){
   setupWorker(io);
 
   io.on('connection', (socket) => {
-    
+    socket.join('video')
     console.log('connected to socket');
     const response = `Welcome ${socket.id}`
     socket.emit('welcome', response)
