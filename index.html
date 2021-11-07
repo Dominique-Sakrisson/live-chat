@@ -87,12 +87,11 @@
       const videoStream = async() => {
         const src = await navigator.mediaDevices.getUserMedia(userMediaConstraints);  
         const mediaRecorder =  new MediaRecorder(src)
-        mediaRecorder.start(625) 
+        mediaRecorder.start(5000) 
         video.srcObject = src;
         video.play()
 
         mediaRecorder.ondataavailable = (e) =>{
-          console.log(e.data);
           socket.emit('video stream', e.data, userId);     
         }
         
@@ -102,14 +101,25 @@
       }
  
 //stored array for each chunk of video data recieved from server
-      let videoDataHouse = [];
+      let videoDataHouse = new ArrayBuffer();
+      let dataHouseArray = new Uint8Array(videoDataHouse)
+      console.log(dataHouseArray);
+      // let url;
+
+
       socket.on('send video', async function(frameData) {
-        videoDataHouse.push(frameData)
-        const frameBlob= await new Blob([...videoDataHouse], {type: 'video/webm; codecs="vp8,opus"'})
+        dataHouseArray = new Uint8Array(frameData)
+        // dataHouseArray.push(frameData)
+        // videoDataHouse.push(frameData)
+        console.log(frameData);
+        // videoDataHouse[0].slice(0, videoDataHouse[0].length) + frameData;
+        const frameBlob= await new Blob([dataHouseArray], {type: 'video/webm; codecs="vp8,opus"'})
         const url = URL.createObjectURL(frameBlob);
         console.log(url);
+        
         video2.src = url;
       })
+
 
         var playPromise = video2.play();
 
@@ -133,7 +143,11 @@
 
       socket.on('welcome', msg => {
         var item = document.createElement('li');
-        item.textContent = msg + 'has joined the room';
+        if(msg.includes('Welcome')){
+          item.textContent = msg;
+        }else{
+          item.textContent = msg + ' has joined the room';
+        }
         item.style.border= '2px solid blue'
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);

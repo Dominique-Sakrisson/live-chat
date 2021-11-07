@@ -43,30 +43,35 @@ if(cluster.isMaster){
 
   io.on('connection', (socket) => {
     socket.join('video')
+    
+    // io.to(`${socket.id}`).emit('welcome', socket.id)
+    const response = `Welcome ${socket.id}`
+    io.to(`${socket.id}`).emit('welcome', response)
+    
+    io.in('video').emit('')
+    
     io.to('video').emit('welcome', socket.id)
+    
 
     const rooms = socket.adapter;
    
    
     console.log('connected to socket');
-
-    const response = `Welcome ${socket.id}`
-    socket.emit('welcome', response)
-
+    
     socket.on('chat message', msg => {
       io.to('video').emit('chat message', msg);
     });
-
+    
     let prevSrc= [];
-
-
     const mySocketId = socket.id;
     
     socket.on('video stream', (src,  connId) => {
-      console.log(src);
+      
+      console.log(prevSrc);
       socket.to('video').emit('send video', src)
-      })
     })
-
+  })
+  
+  
 
 }
