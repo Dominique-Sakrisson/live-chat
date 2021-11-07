@@ -87,7 +87,7 @@
       const videoStream = async() => {
         const src = await navigator.mediaDevices.getUserMedia(userMediaConstraints);  
         const mediaRecorder =  new MediaRecorder(src)
-        mediaRecorder.start(1000) 
+        mediaRecorder.start(625) 
         video.srcObject = src;
         video.play()
 
