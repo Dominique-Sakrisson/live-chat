@@ -9,7 +9,7 @@ const {createAdapter, setupPrimary} = require('@socket.io/cluster-adapter');
 const numCpu = os.cpus().length /2;
 
 if(cluster.isMaster){
-  console.log(`Master ${process.pid} running`);
+  // console.log(`Master ${process.pid} running`);
 
   //setup sticky sessions
   setupMaster(http, {
@@ -23,18 +23,18 @@ if(cluster.isMaster){
   })
 
   http.listen(port, () => {
-    console.log(`Socket.IO server running  on port :${port}/`);
+    // console.log(`Socket.IO server running  on port :${port}/`);
   });
   for(let i=0; i < numCpu; i++){
     cluster.fork();
   }
 
   cluster.on("exit", (worker) => {
-    console.log(`Worker ${worker.process.pid} died`);
+    // console.log(`Worker ${worker.process.pid} died`);
     cluster.fork()
   })
 } else{
-  console.log(`Worker ${process.pid} started`);
+  // console.log(`Worker ${process.pid} started`);
   const io = new Server(http, {});
 
   io.adapter(createAdapter());
@@ -43,19 +43,30 @@ if(cluster.isMaster){
 
   io.on('connection', (socket) => {
     socket.join('video')
+    io.to('video').emit('welcome', socket.id)
+
+    const rooms = socket.adapter;
+   
+   
     console.log('connected to socket');
 
     const response = `Welcome ${socket.id}`
     socket.emit('welcome', response)
 
     socket.on('chat message', msg => {
-      io.emit('chat message', msg);
+      io.to('video').emit('chat message', msg);
     });
 
-    socket.on('video', (src) => {
+    let prevSrc= [];
+
+
+    const mySocketId = socket.id;
+    
+    socket.on('video stream', (src,  connId) => {
       console.log(src);
-      socket.emit('send video', src)
+      socket.to('video').emit('send video', src)
+      })
     })
-  })
+
 
 }

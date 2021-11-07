@@ -28,20 +28,21 @@
     <form id="form" action="">
       <input id="input" autocomplete="off" />
       <button>Send</button>
-      <button>Video</button>
+      <button id='record'>Record Video</button>
     </form>
   </body>
   <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
-      
+      var userId;
 
       var body = document.getElementById('div');
       var welcome = document.getElementById('welcome');
       var messages = document.getElementById('messages');
       var form = document.getElementById('form');
       var input = document.getElementById('input');
-      const constraints = {
+      var recordButton = document.getElementById('record');
+      const userMediaConstraints = {
         video: {
           frameRate: {
             ideal: 10, max: 15
@@ -58,94 +59,92 @@
           },
         },
       }
+
       const video = document.createElement('VIDEO')
       video.style.position = 'fixed';
       video.style.zIndex = -1;
       video.style.width = '200px';
       video.style.top = '150px';
       video.style.right = '0px';
+      video.style.border= '2px solid red'
 
-      div.appendChild(video)
-      
-
-      const videoStream = async() => {
-        const src = await navigator.mediaDevices.getUserMedia(constraints);  
-        
-        const data = [];
-
-        const mediaRecorder =  new MediaRecorder(src)
-        mediaRecorder.start(200)
-
-       
-        mediaRecorder.ondataavailable = (e) =>{
-          data.push(e.data)
-          // console.log('data', data);
-          socket.emit('video', data);
-          const blob = new Blob(data, {'type': 'video'})
-         const boo = window.URL.createObjectURL(blob)
-         console.log(boo);
-         video.src = boo;
-        }
-        
-
-        
-    
-        video.onloadedmetadata = (e) => {
-          video.play()
-        }
-
-        // const track = stream.getTracks()
-        // console.log(stream.getTracks()); 
-        // video.srcObject = src;
-        // console.log(stream);
-        socket.emit('video', data);
-      }
-       videoStream()
-     
       const video2 = document.createElement('VIDEO')
+      video2.setAttribute('autoplay', "true")
+      video2.setAttribute('muted', "muted")
+    
       video2.style.position = 'fixed';
       video2.style.zIndex = -1;
       video2.style.width = '200px';
       video2.style.top = '350px';
       video2.style.right = '0px';
+      video2.style.border = '2px solid blue';
 
+      div.appendChild(video)
       div.appendChild(video2)
+  
+ 
 
-     const otherData =[]
+      const videoStream = async() => {
+        const src = await navigator.mediaDevices.getUserMedia(userMediaConstraints);  
+        const mediaRecorder =  new MediaRecorder(src)
+        mediaRecorder.start(1000) 
+        video.srcObject = src;
+        video.play()
 
-      socket.on('send video', (src) => {
-        otherData.push(src)
-        const blob = new Blob(src, {'type': 'video'})
-        const boo = window.URL.createObjectURL(blob)
-        video2.src = boo;
+        mediaRecorder.ondataavailable = (e) =>{
+          console.log(e.data);
+          socket.emit('video stream', e.data, userId);     
+        }
         
-        video2.play()
+      }
+      recordButton.onclick= () => {
+        videoStream()
+      }
+ 
+//stored array for each chunk of video data recieved from server
+      let videoDataHouse = [];
+      socket.on('send video', async function(frameData) {
+        videoDataHouse.push(frameData)
+        const frameBlob= await new Blob([...videoDataHouse], {type: 'video/webm; codecs="vp8,opus"'})
+        const url = URL.createObjectURL(frameBlob);
+        console.log(url);
+        video2.src = url;
       })
 
-      console.log(otherData);
-      
+        var playPromise = video2.play();
 
+        if (playPromise !== undefined) {
+          playPromise.then(_ => {
+            // Automatic playback started!
+            // Show playing UI.
+          })
+          .catch(error => {
+            // Auto-play was prevented
+            // Show paused UI.
+          });
+        }
       
+      socket.on('chat message', function(msg) {
+        var item = document.createElement('li');
+        item.textContent = msg;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
 
+      socket.on('welcome', msg => {
+        var item = document.createElement('li');
+        item.textContent = msg + 'has joined the room';
+        item.style.border= '2px solid blue'
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      })
       form.addEventListener('submit', function(e) {
         e.preventDefault();
-        
         if (input.value) {
-          
           socket.emit('chat message', input.value);
           input.value = '';
         }
-});
+      });
 
-socket.on('chat message', function(msg) {
-  var item = document.createElement('li');
-  item.textContent = msg;
-  messages.appendChild(item);
-  window.scrollTo(0, document.body.scrollHeight);
-});
-
-socket.on('welcome', function(msg) {
-  welcome.textContent= msg;
-})
     </script>
 </html>
