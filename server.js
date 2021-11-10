@@ -80,22 +80,14 @@ const numCpu = os.cpus().length /2;
     //when the client sends the server their username
     //get all open rooms and disconnect the client from any that arent the landing page
     socket.on('send username', name => {
-      console.log(name);
       // console.log(socket.adapter.rooms);
       const openRooms = [...socket.adapter.rooms]
-      console.log(openRooms);
-      // openRooms.map(room => {
-      //   console.log(room, 'line 84');
-      //   if(room[0] !== 'landing'){
-      //     console.log(room[0], ' line 86');
-      //     if(socket.id === room[0]){
-      //       socket.disconnect();
-      //       console.log(`socket id: ${socket.id} disconnected`);
-      //       // console.log(socket);
-      //     }
-      //   }
-      // })
-
+      openRooms.map(room => {
+        if(room[0] === 'landing'){
+          const users = Array.from(room[1])
+          io.to('landing').emit('update users', users)
+        }
+      })
     })
     
     // //listening for client messages to the server

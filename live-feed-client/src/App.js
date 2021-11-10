@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import socketIOClient from "socket.io-client";
 import UserForm from "./components/UserForm";
+import ping from './assets/msgsounds.mp3'
 const ENDPOINT = "http://localhost:3001";
 const socket = socketIOClient(ENDPOINT);
 
@@ -30,6 +31,7 @@ const App = () => {
   const [displayName, setDisplayName] = useState('')
   const [msgInput, setMsgInput] = useState('')
   const [chatMessages, setChatMessages] = useState([])
+  const [audio, setAudio] = useState(new Audio(ping))
   
   const [activeUsers, setActiveUsers] = useState([]);
   const [src, setSrc] = useState('')
@@ -121,7 +123,6 @@ placeholder={'enter a message... '}
     setSrc(stream)
     // video.srcObject = stream;
     stream.getTracks().forEach(track => {
-    // console.log(track.getSettings());
     })
     let video = document.getElementById('video')
     video.srcObject = stream;
@@ -153,35 +154,32 @@ placeholder={'enter a message... '}
       // window.scrollTo(0, document.getElementById('messages').scrollHeight);
     })
     
-    // socket.on('send video', async function(frameData) {
-    //   const video2 = document.getElementById('video2')
-    //   // video2.src = url;
-    //   var playPromise = video2.play();
+    socket.on('send video', async function(frameData) {
+      const video2 = document.getElementById('video2')
+      // video2.src = url;
+      var playPromise = video2.play();
       
-    //   if (playPromise !== undefined) {
-    //     playPromise.then(_ => {
-    //       // Automatic playback started!
-    //       // Show playing UI.
-    //     })
-    //     .catch(error => {
-    //       // Auto-play was prevented
-    //       // Show paused UI.
-    //     });
-    //   }
-    // })    
+      if (playPromise !== undefined) {
+        playPromise.then(_ => {
+          // Automatic playback started!
+          // Show playing UI.
+        })
+        .catch(error => {
+          // Auto-play was prevented
+          // Show paused UI.
+        });
+      }
+    })    
 
-    // socket.on('update users', users => {
-    //   setActiveUsers(users)
-    // })
+    socket.on('update users', users => {
+      setActiveUsers(users)
+    })
     
     socket.on('chats', msg  => {
       console.log(chatMessages);
       setChatMessages(prevChats =>[...prevChats, msg ])
+      audio.play()
       console.log(chatMessages);
-     
-      // msgs.push(msg)
-     
-      // setChatMessages(msgs)
     })
   }, [])
 
