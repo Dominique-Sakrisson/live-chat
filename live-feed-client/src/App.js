@@ -64,43 +64,51 @@ const users = activeUsers.map(user => {
 
 
   const chatBar = {
-
     width:  '90%',
     display: 'flex',
-     padding: '2rem', 
-     justifyContent:'center',
-    fontSize: '1.3rem'
+    padding: '2rem', 
+    justifyContent:'center',
+    fontSize: '1.3rem',
+     margin: '0 auto'
   }
 
 
 const messages = chatMessages.map(message => {
-    return <li key={message}style={{border: '2px solid black', width: '25%'}}>
+    return <li key={message+ Math.random() *5}style={{border: '2px solid black', width: '25%'}}>
         <p style={{fontSize: '120%', fontWeight: 'bold'}}>{message}</p> 
       </li>
 })
 
+
+function trackMsgs() {
+  const msgDiv =document.getElementById('messages')
+  if(msgDiv){
+    msgDiv.scrollTop= msgDiv.scrollHeight
+  }
+}
 const messageBoard = <div>
   <p>Message board</p>
-<ul id='messages' style={{
-  overflow: 'scroll', 
-  height: '20rem', 
-  background: 'rgba(50, 230, 140, .8)', 
-  padding: '10px'
-}}>
+  <ul id='messages' style={{
+    overflow: 'scroll', 
+    height: '20rem', 
+    background: 'rgba(50, 230, 140, .8)', 
+    padding: '10px'
+  }}>
     {messages}
-</ul>
-    </div>
+  </ul>
+</div>
 
-const messageInputBar = <form id="form" >
-<input 
-id="input" 
-value={msgInput} 
-style={chatBar} 
-onChange={handleMsgChange}
-autoComplete="off" 
-placeholder={'enter a message... '}
-/>
-<button onClick={handleSubmitMsg}>Send</button>
+const messageInputBar = 
+<form style={{display: 'flex', flexDirection: 'row-reverse', justifyContent: 'space-around'}}id="form" >
+  <input 
+    id="input" 
+    value={msgInput} 
+    style={chatBar} 
+    onChange={handleMsgChange}
+    autoComplete="off" 
+    placeholder={'enter a message... '}
+  />
+  <button style={{width: '5rem'}}onClick={handleSubmitMsg}>Send</button>
 </form>
 
   const openMediaDevices = async () => {
@@ -151,7 +159,8 @@ placeholder={'enter a message... '}
           return prevMessages
         })
       }
-      // window.scrollTo(0, document.getElementById('messages').scrollHeight);
+     
+      
     })
     
     socket.on('send video', async function(frameData) {
@@ -178,13 +187,18 @@ placeholder={'enter a message... '}
     socket.on('chats', msg  => {
       console.log(chatMessages);
       setChatMessages(prevChats =>[...prevChats, msg ])
-      audio.play()
+        audio.play()
+        // const msgDiv =document.getElementById('messages')
+        // msgDiv.scrollTop= msgDiv.scrollHeight
+        trackMsgs()
       console.log(chatMessages);
     })
   }, [])
 
   
   useEffect(() => {
+
+    trackMsgs()
     console.log('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', chatMessages);
     
     setMsgInput('')

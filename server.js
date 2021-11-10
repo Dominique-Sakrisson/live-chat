@@ -10,33 +10,33 @@ const { EventEmitter } = require('stream');
 const numCpu = os.cpus().length /2;
 
 
-// if(cluster.isMaster){
-//   // console.log(`Master ${process.pid} running`);
+if(cluster.isMaster){
+  console.log(`Master ${process.pid} running`);
 
 //   //setup sticky sessions
-//   setupMaster(http, {
-//     loadBalancingMethod: 'least-connection'
-//   });
+  setupMaster(http, {
+    loadBalancingMethod: 'least-connection'
+  });
 
 //   //setup connections between different workers
-//   setupPrimary();
-//   cluster.setupMaster({
-//     serialization: "advanced",
-//   })
+  setupPrimary();
+  cluster.setupMaster({
+    serialization: "advanced",
+  })
 
   http.listen(port, () => {
-    // console.log(`Socket.IO server running  on port :${port}/`);
+    console.log(`Socket.IO server running  on port :${port}/`);
   });
-//   for(let i=0; i < numCpu; i++){
-//     cluster.fork();
-//   }
+  for(let i=0; i < numCpu; i++){
+    cluster.fork();
+  }
 
-//   cluster.on("exit", (worker) => {
-//     // console.log(`Worker ${worker.process.pid} died`);
-//     cluster.fork()
-//   })
-// } else{
-//   // console.log(`Worker ${process.pid} started`);
+  cluster.on("exit", (worker) => {
+    console.log(`Worker ${worker.process.pid} died`);
+    cluster.fork()
+  })
+} else{
+  console.log(`Worker ${process.pid} started`);
 
 //create a new socket io server instance
 //pass it the http server already listening on a particular port
@@ -51,22 +51,22 @@ const numCpu = os.cpus().length /2;
     }
 });
 
-//   io.adapter(createAdapter());
+  io.adapter(createAdapter());
 
-//   //main namespace
-// const mainAdapter = io.of('/').adapter;
+  //main namespace
+const mainAdapter = io.of('/').adapter;
 // //custom adapter
 // const adminAdapter = io.of('/admin').adapter;
 
-// io.of('/').adapter.on('create-room', (room) => {
-//   console.log(`room ${room} was created`);
-// })
+io.of('/').adapter.on('create-room', (room) => {
+  console.log(`room ${room} was created`);
+})
 
 // io.of('/').adapter.on('join-room', (room, id) => {
   //   console.log(`socket ${id} has joined room ${room}`);
   // })
   io.socketsJoin("video")
-  //   setupWorker(io);
+    setupWorker(io);
 
   //The names entered from each client
   let userNames= [];
@@ -80,16 +80,25 @@ const numCpu = os.cpus().length /2;
     //when the client sends the server their username
     //get all open rooms and disconnect the client from any that arent the landing page
     socket.on('send username', name => {
-      // console.log(socket.adapter.rooms);
       const openRooms = [...socket.adapter.rooms]
+      // console.log(socket.adapter.rooms);
       openRooms.map(room => {
         if(room[0] === 'landing'){
           const users = Array.from(room[1])
-          io.to('landing').emit('update users', users)
+          io.to(room[0]).emit('update users', users)
         }
       })
     })
-    
+    io.on('disconnect', (socket) => {
+      const openRooms = [...socket.adapter.rooms]
+      // console.log(socket.adapter.rooms);
+      openRooms.map(room => {
+        if(room[0] === 'landing'){
+          const users = Array.from(room[1])
+          io.to(room[0]).emit('update users', users)
+        }
+      })
+    })
     // //listening for client messages to the server
     // socket.on('send message', (msg, id) => {
     //   console.log(id);
@@ -159,4 +168,4 @@ const numCpu = os.cpus().length /2;
   // })
   
 
-// }
+}
