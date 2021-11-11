@@ -2,8 +2,13 @@ import React, { useState, useEffect } from "react";
 import socketIOClient from "socket.io-client";
 import UserForm from "./components/UserForm";
 import ping from './assets/msgsounds.mp3'
+import OnlineUsers from "./components/OnlineUsers";
 const ENDPOINT = "http://localhost:3001";
-const socket = socketIOClient(ENDPOINT);
+const socket = socketIOClient(ENDPOINT, {withCredentials: true});
+// import socketIOClient from "socket.io-client";
+// const ENDPOINT = "http://localhost:3001";
+// const socketLanding = socketIOClient(`${ENDPOINT}/landing`, {withCredentials: true});
+const socketMessageBoard = socketIOClient(`${ENDPOINT}/messageBoard`, {withCredentials: true});
 
 const userMediaConstraints = {
   video: {
@@ -29,6 +34,7 @@ const userMediaConstraints = {
 
 const App = () => {
   const [displayName, setDisplayName] = useState('')
+  const [roomToJoin, setRoomToJoin] = useState('')
   const [msgInput, setMsgInput] = useState('')
   const [chatMessages, setChatMessages] = useState([])
   const [audio, setAudio] = useState(new Audio(ping))
@@ -47,8 +53,10 @@ const App = () => {
    </h2>
 
 const users = activeUsers.map(user => {
+  console.log(user);
   return <li key={user + Math.random() *5} style={{border: '2px solid black', width: '25%'}}>
-      <p style={{fontSize: '120%', fontWeight: 'bold'}}>{user}</p> 
+      <p style={{fontSize: '120%', fontWeight: 'bold'}}>{user.username}</p> 
+      <p style={{fontSize: '80%', }}>private msg room: {user.privateRoom}</p> 
     </li>
 })
    const activeUserList =  <ul style={
@@ -87,7 +95,7 @@ function trackMsgs() {
   }
 }
 const messageBoard = <div>
-  <p>Message board</p>
+  <p>Landing Room Message board</p>
   <ul id='messages' style={{
     overflow: 'scroll', 
     height: '20rem', 
@@ -120,10 +128,10 @@ const messageInputBar =
   }
 
   const onUserSubmit = user => {
-    console.log(user);
+    if(!user.room){
+      setRoomToJoin('open chat room')
+    }
     setDisplayName(user.name)
-    // setRoomToJoin(user.room)
-    socket.emit('send username', displayName)
   }
 
   const videoStream = async() => {
@@ -138,29 +146,17 @@ const messageInputBar =
     // mediaRecorder.start(5000) 
     video.play()
     mediaRecorder.ondataavailable = (e) =>{
-
-      socket.emit('video stream', e.data, roomSocket.id);     
+    socket.emit('video stream', e.data, roomSocket.id);     
     }
   }
  
    useEffect(() => {
-    setRoomSocket(socket);
-  
     socket.on('welcome', msg => {
       if(msg.includes('Welcome')){
-        setChatMessages(prevMessages => {
-          prevMessages.push(msg);
-          return prevMessages
-        })
-        
+        setChatMessages(prevMessages => [...prevMessages, msg])
       }else{
-        setChatMessages(prevMessages => {
-          prevMessages.push(msg + ' has joined the room');
-          return prevMessages
-        })
+        setChatMessages(prevMessages => [...prevMessages, msg + ' has joined the room']) 
       }
-     
-      
     })
     
     socket.on('send video', async function(frameData) {
@@ -181,29 +177,37 @@ const messageInputBar =
     })    
 
     socket.on('update users', users => {
+      console.log(users,' gfgdfg');
       setActiveUsers(users)
     })
     
     socket.on('chats', msg  => {
-      console.log(chatMessages);
       setChatMessages(prevChats =>[...prevChats, msg ])
-        audio.play()
-        // const msgDiv =document.getElementById('messages')
-        // msgDiv.scrollTop= msgDiv.scrollHeight
-        trackMsgs()
-      console.log(chatMessages);
+      audio.play()
     })
+
+    // socketMessageBoard.on('greeting', (response, user) => {
+    //   console.log('anything');
+    //   setActiveUsers(prevUsers =>[...prevUsers, user])
+    //   setChatMessages(prevChats =>[...prevChats, response ])
+    //   audio.play()
+    // })
+    
   }, [])
 
   
   useEffect(() => {
+    if(displayName){
+      socket.emit('send new user', {displayName, roomToJoin})
+    }
+    return () => {
+    }
+  }, [displayName])
 
+  useEffect(() => {
     trackMsgs()
-    console.log('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', chatMessages);
-    
     setMsgInput('')
     return () => {
-      
     }
   }, [chatMessages])
 
@@ -220,12 +224,17 @@ function handleSubmitMsg(e){
 }
 
 const userForm = <UserForm  onSubmit={onUserSubmit}/>
+const uList = <OnlineUsers />
 const recordButton = <button onClick={handleRecord}>Record here</button>
   return (
     <>
     {/* without a displayname the client needs to submit the sign up form */}
-    {(!displayName) ? 
-    userForm 
+    {(!displayName) ? <>
+
+      {userForm}
+      {uList}
+    </>
+
     :
     <div>
     {/* current time {time} */}

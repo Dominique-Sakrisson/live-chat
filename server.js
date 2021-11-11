@@ -7,165 +7,124 @@ const http = require('http').Server(app);
 const {setupMaster, setupWorker} = require('@socket.io/sticky');
 const {createAdapter, setupPrimary} = require('@socket.io/cluster-adapter');
 const { EventEmitter } = require('stream');
+const { createPublicKey } = require('crypto');
 const numCpu = os.cpus().length /2;
 
+const userProfiles = []
 
-if(cluster.isMaster){
-  console.log(`Master ${process.pid} running`);
-
-//   //setup sticky sessions
-  setupMaster(http, {
-    loadBalancingMethod: 'least-connection'
-  });
-
-//   //setup connections between different workers
-  setupPrimary();
-  cluster.setupMaster({
-    serialization: "advanced",
-  })
-
+// if(cluster.isMaster){
+  // console.log(`Master ${process.pid} running`);
+  // //setup sticky sessions
+  // setupMaster(http, {
+  //   loadBalancingMethod: 'least-connection'
+  // });
+  // //setup connections between different workers
+  // setupPrimary();
+  // cluster.setupMaster({
+  //   serialization: "advanced",
+  // })
   http.listen(port, () => {
     console.log(`Socket.IO server running  on port :${port}/`);
   });
-  for(let i=0; i < numCpu; i++){
-    cluster.fork();
-  }
+  // for(let i=0; i < numCpu; i++){
+  //   cluster.fork();
+  // }
+  // cluster.on("exit", (worker) => {
+  //   console.log(`Worker ${worker.process.pid} died`);
+  //   cluster.fork()
+  // })
+// } else{
+  // console.log(`Worker ${process.pid} started`);
 
-  cluster.on("exit", (worker) => {
-    console.log(`Worker ${worker.process.pid} died`);
-    cluster.fork()
-  })
-} else{
-  console.log(`Worker ${process.pid} started`);
-
-//create a new socket io server instance
-//pass it the http server already listening on a particular port
-//passing it a specific port number will automatically create a new http server at that port
+  //create a new socket io server instance
+  //pass it the http server already listening on a particular port
+  //passing it a specific port number will automatically create a new http server at that port
   const io = new Server(http, {
     //allowing access from which domains
     cors: {
         //    origin: `${backendURL}`,
         //    origin: `*`,
         origin: `http://localhost:3000`,
-        methods: ['POST', 'GET'] 
+        methods: ['POST', 'GET'],
+        credentials: true 
     }
-});
+  });
 
-  io.adapter(createAdapter());
+  // io.adapter(createAdapter());
+
+
+  //create namespaces and adapters 
 
   //main namespace
-const mainAdapter = io.of('/').adapter;
-// //custom adapter
-// const adminAdapter = io.of('/admin').adapter;
-
-io.of('/').adapter.on('create-room', (room) => {
-  console.log(`room ${room} was created`);
-})
-
-// io.of('/').adapter.on('join-room', (room, id) => {
-  //   console.log(`socket ${id} has joined room ${room}`);
+  // const mainAdapter = io.of('/').adapter;
+  
+  //custom admin namespace
+  // const adminAdapter = io.of('/admin').adapter;
+  
+  //listener for anytime a room is created
+  // mainAdapter.on('create-room', (room) => {
+  //   console.log(`room ${room} was created`);
   // })
-  io.socketsJoin("video")
-    setupWorker(io);
+  
+  // //listener for anytime a room is joined
+  // mainAdapter.on('join-room', (room, id) => {
+  //   console.log(`socket ${id} has joined room: ${room}`);
+  // })
 
-  //The names entered from each client
-  let userNames= [];
+  // setupWorker(io);
 
-  io.on('connection', (socket) => {
-    //initially connect to the landing page
-    console.log('connected to socket');
-    
+  io.sockets.on('connection', (socket) => {
+    console.log('new connection', socket.id);
     socket.join('landing')
 
-    //when the client sends the server their username
-    //get all open rooms and disconnect the client from any that arent the landing page
-    socket.on('send username', name => {
-      const openRooms = [...socket.adapter.rooms]
-      // console.log(socket.adapter.rooms);
-      openRooms.map(room => {
-        if(room[0] === 'landing'){
-          const users = Array.from(room[1])
-          io.to(room[0]).emit('update users', users)
-        }
-      })
-    })
-    io.on('disconnect', (socket) => {
-      const openRooms = [...socket.adapter.rooms]
-      // console.log(socket.adapter.rooms);
-      openRooms.map(room => {
-        if(room[0] === 'landing'){
-          const users = Array.from(room[1])
-          io.to(room[0]).emit('update users', users)
-        }
-      })
-    })
-    // //listening for client messages to the server
-    // socket.on('send message', (msg, id) => {
-    //   console.log(id);
-    //   console.log(msg, 'socket id line 105');
-    //   io.to('landing').emit('chats', msg)
-    // });
+    //one way of getting the connected sockets list
+    var clientRooms = io.sockets.adapter.rooms;
+    const landingRoom = clientRooms.get('landing')
+    const connectedNames = Array.from(landingRoom)
 
-    //send information on the clients currently connected
+    //send number of connected clients
+    io.to('landing').emit('users', landingRoom.size)
 
-    const response = `Welcome ${socket.id}`
-    io.to(`${socket.id}`).emit('welcome', response)
-    
-    
-    
-    
-    //socket.adapter.rooms grabs the rooms for the socket
-    // io.socketsLeave(socket.id)
-    // io.to(`${socket.id}`).emit('welcome', socket.id)
-    // io.in('video').emit('')
-    // io.to('video').emit('welcome', socket.id)
-    // let customRoom;
-    // const mySocketId = socket.id;
-    //when new client connects and entered a room name
-    //client joins that room,
-    //socket emits to that room a new user joined
-    //that user is displaye to other clients
-    
-    // socket.on('join room', user =>{
-    //   // socket.join(user.room)
-    //   // console.log(user.room);
-    //   // customRoom = user.room;
-    //   userNames.push(user.name)
-    //   const openRooms = [...socket.adapter.rooms]
-    //   console.log(openRooms);
-    //     openRooms.map(connectedRoom => {
-    //       if(connectedRoom[0] === user.room){
-    //         let usersInRoom = Array.from(connectedRoom[1])
-    //         io.to('user.room').emit('update users', userNames)
-    //         // console.log(userNames, 'line 98');
-    //       }
-    //     })
-      
-    // })
-    //listening for client messages to the server
-   socket.on('send message', (msg, id) => {
-      console.log(id);
+    //on disconnect we want to send client update of current users on the server
+    socket.on('disconnecting', () => {
+      console.log(socket.id, 'hhhhhhhhhhhhhhhhhhhhhh');
+      var clientRooms = io.sockets.adapter.rooms;
+      const landingRoom = clientRooms.get('landing')
+      //relay the number of remaining users  
+const nowUsers = userProfiles.filter(profile => (profile.privateRoom === socket.id ))
+      if(landingRoom){
+        io.to('landing').emit('users', landingRoom.size)
+      }
+console.log(nowUsers, 'after ones gone');
+      io.to('landing').emit('update users', nowUsers )
+
+    });
+    console.log(userProfiles, 'profiles array');
+    //this gets very slow when more than 2 users are connected
+    socket.on('send new user', user => {
+      userProfiles.push({
+        privateRoom: socket.id, 
+        username: user.displayName
+      })
+
+      console.log(userProfiles);
+
+      var clientRooms = io.sockets.adapter.rooms;
+      const landingRoom = clientRooms.get('landing')
+
+      const connectedNames = Array.from(landingRoom)
+
+      const response = `Welcome ${user.displayName}`
+
+      //emit event to room landing, a welcome message for the newly connected client
+      io.to('landing').emit('welcome', response, user)
+
+      //emit event to room landing a list of connected clients
+      io.to('landing').emit('update users', userProfiles )
+    })
+
+    socket.on('send message', (msg, id) => {
       socket.to('landing').emit('chats', msg)
     });
-    
-  })
-  // //listening for client messages to the server
-  // io.on('send message', msg => {
-     
-  //   console.log(msg, 'socket id line 105');
-  //   io.to('landing').emit('chats', msg)
-  // });
-
-  // io.on('join room', (socket) => {
-  //   socket.join(user.roomToJoin, 'line 112')
-  // })
-
-  
-  // io.on('video stream', (src,  connId) => {
-    
-   
-  //   socket.to('video').emit('send video', src)
-  // })
-  
-
-}
+  });
+// }

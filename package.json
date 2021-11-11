@@ -17,5 +17,9 @@
     "http": "^0.0.1-security",
     "nodemon": "^2.0.14",
     "socket.io": "^4.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.15.0",
+    "@testing-library/react": "^12.1.2"
   }
 }
