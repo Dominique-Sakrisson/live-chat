@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:watch": "nodemon server.js"
+    "start:watch": "nodemon server.js",
+    "heroku-postbuild": "cd live-feed-client && npm install && npm run build"
   },
   "keywords": [],
   "author": "",
