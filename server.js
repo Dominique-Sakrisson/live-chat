@@ -43,7 +43,7 @@ const userProfiles = []
     //allowing access from which domains
     cors: {
         //    origin: `${backendURL}`,
-        //    origin: `*`,
+        origin: `https://live-chat-feed.herokuapp.com/`,
         origin: `http://localhost:3000`,
         methods: ['POST', 'GET'],
         credentials: true 
