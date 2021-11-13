@@ -37,7 +37,6 @@ const App = () => {
   const [activeUsers, setActiveUsers] = useState([]);
   const [src, setSrc] = useState('')
   const [roomSocket, setRoomSocket] = useState('')
-
   const greeting = <h1> Hello {displayName}</h1>;
   const activeUsersBanner = <h2 style={{
     background: 'rgba(100,100,200, .8)',
@@ -76,11 +75,21 @@ const users = activeUsers.map(user => {
   }
 
 
-const messages = chatMessages.map(message => {
-    return <li key={message+ Math.random() *5}style={{border: '2px solid black', width: '80%'}}>
-        <p style={{fontSize: '120%', fontWeight: 'bold'}}>{message}</p> 
-      </li>
-})
+const messages = chatMessages.map(message => 
+<li 
+  key={message+ Math.random() *5} 
+  style={{
+    border: '2px solid black', 
+    width: '80%', 
+    listStyle: 'none',
+    position: "relative",
+    left: '40px'
+    }}
+>
+  <p style={{fontSize: '120%', fontWeight: 'bold'}}>
+    {message}
+</p> 
+</li>)
 
 
 function trackMsgs() {
