@@ -128,8 +128,8 @@ let userProfiles = []
       io.to('landing').emit('update users', userProfiles )
     })
 
-    socket.on('send message', (msg, id) => {
-      socket.to('landing').emit('chats', msg)
+    socket.on('send message', (msg, {id, sender}) => {
+      socket.to('landing').emit('chats', msg, {id, sender})
     });
     //on disconnect we want to send client update of current users on the server
     socket.on('disconnect', () => {

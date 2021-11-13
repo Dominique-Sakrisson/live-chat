@@ -142,6 +142,7 @@ const messages = chatMessages.map(message => {
     </li>
   return msgItem
   }
+  console.log(message);
   const msgItem = <li 
     key={message+ Math.random() *5} 
     style={{
@@ -159,8 +160,9 @@ const messages = chatMessages.map(message => {
       margin: '.25rem',
       }}>
     <p style={{fontSize: '120%', fontWeight: 'bold'}}>
-      {message}
-    </p> 
+    {(message.sender) ? ` ${message.msg}` : message }
+    </p>
+    <span style={{fontSize: '.8rem', borderTop: '1px solid black'}}>{(message.sender) ? `from ${message.sender}` : ''}</span> 
   </li>
   return msgItem
 })
@@ -265,8 +267,8 @@ const messageInputBar =
       setActiveUsers(users)
     })
     
-    socket.on('chats', msg  => {
-      setChatMessages(prevChats =>[...prevChats, msg ])
+    socket.on('chats', (msg, {id, sender})  => {
+      setChatMessages(prevChats =>[...prevChats, {msg, sender} ])
       audio.play()
     })
 
@@ -302,7 +304,7 @@ function handleMsgChange(e){
 function handleSubmitMsg(e){
     e.preventDefault();
     setChatMessages(prevMsgs => [...prevMsgs, {msg:msgInput, owner: true}])
-    socket.emit('send message', msgInput, socket.id)
+    socket.emit('send message', msgInput, {id: socket.id, sender: displayName})
     console.log(chatMessages);
 }
 
