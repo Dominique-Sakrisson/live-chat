@@ -77,7 +77,7 @@ const users = activeUsers.map(user => {
 
 
 const messages = chatMessages.map(message => {
-    return <li key={message+ Math.random() *5}style={{border: '2px solid black', width: '25%'}}>
+    return <li key={message+ Math.random() *5}style={{border: '2px solid black', width: '80%'}}>
         <p style={{fontSize: '120%', fontWeight: 'bold'}}>{message}</p> 
       </li>
 })
@@ -95,7 +95,8 @@ const messageBoard = <div>
     overflow: 'scroll', 
     height: '20rem', 
     background: 'rgba(50, 230, 140, .8)', 
-    padding: '10px'
+    padding: '10px',
+    width: '100%'
   }}>
     {messages}
   </ul>
