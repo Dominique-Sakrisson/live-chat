@@ -23,7 +23,7 @@ const UserForm = ({onSubmit}) => {
         margin: '2rem auto',
         width:  '45%',
         flexDirection: 'column',
-        padding: '1.5rem', 
+        padding: '1rem', 
         textAlign: 'center',
         fontSize: '1.5rem',
         background: 'rgba()',
@@ -32,9 +32,9 @@ const UserForm = ({onSubmit}) => {
 
     const buttonStyle ={
         textAlign: 'center',
-        width: '60%',
+        width: '40%',
         margin: 'auto',
-        padding: '2.5rem',
+        padding: '1rem',
         fontSize: '2rem',
         pointer: 'auto'
     }
@@ -47,7 +47,7 @@ const UserForm = ({onSubmit}) => {
         color: 'grey',
         width:  '45%',
         flexDirection: 'column',
-        padding: '1.5rem', 
+        padding: '1rem', 
         textAlign: 'center',
         fontSize: '1.5rem',
         background: 'rgba()',

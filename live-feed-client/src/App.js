@@ -4,15 +4,6 @@ import UserForm from "./components/UserForm";
 import ping from './assets/msgsounds.mp3'
 import OnlineUsers from "./components/OnlineUsers";
 import socket from './service/socket'
-const ENDPOINT = "http://localhost:3001";
-
-
-// const ENDPOINT = "https://live-chat-feed.herokuapp.com/";
-
-// const socket = socketIOClient(ENDPOINT, {withCredentials: true});
-// import socketIOClient from "socket.io-client";
-// const ENDPOINT = "http://localhost:3001";
-// const socketLanding = socketIOClient(`${ENDPOINT}/landing`, {withCredentials: true});
 
 const userMediaConstraints = {
   video: {
