@@ -3,14 +3,16 @@ import socketIOClient from "socket.io-client";
 import UserForm from "./components/UserForm";
 import ping from './assets/msgsounds.mp3'
 import OnlineUsers from "./components/OnlineUsers";
-// const ENDPOINT = "http://localhost:3001";
-const ENDPOINT = "https://live-chat-feed.herokuapp.com/";
+import socket from './service/socket'
+const ENDPOINT = "http://localhost:3001";
 
-const socket = socketIOClient(ENDPOINT, {withCredentials: true});
+
+// const ENDPOINT = "https://live-chat-feed.herokuapp.com/";
+
+// const socket = socketIOClient(ENDPOINT, {withCredentials: true});
 // import socketIOClient from "socket.io-client";
 // const ENDPOINT = "http://localhost:3001";
 // const socketLanding = socketIOClient(`${ENDPOINT}/landing`, {withCredentials: true});
-const socketMessageBoard = socketIOClient(`${ENDPOINT}/messageBoard`, {withCredentials: true});
 
 const userMediaConstraints = {
   video: {
@@ -40,7 +42,7 @@ const App = () => {
   const [msgInput, setMsgInput] = useState('')
   const [chatMessages, setChatMessages] = useState([])
   const [audio, setAudio] = useState(new Audio(ping))
-  
+  const [socketMessageBoard, setSocketMessageBoard] = useState();
   const [activeUsers, setActiveUsers] = useState([]);
   const [src, setSrc] = useState('')
   const [roomSocket, setRoomSocket] = useState('')
@@ -55,7 +57,7 @@ const App = () => {
    </h2>
 
 const users = activeUsers.map(user => {
-  console.log(user);
+  
   return <li key={user + Math.random() *5} style={{border: '2px solid black', width: '25%'}}>
       <p style={{fontSize: '120%', fontWeight: 'bold'}}>{user.username}</p> 
       <p style={{fontSize: '80%', }}>private msg room: {user.privateRoom}</p> 
@@ -188,12 +190,12 @@ const messageInputBar =
       audio.play()
     })
 
-    // socketMessageBoard.on('greeting', (response, user) => {
-    //   console.log('anything');
-    //   setActiveUsers(prevUsers =>[...prevUsers, user])
-    //   setChatMessages(prevChats =>[...prevChats, response ])
-    //   audio.play()
-    // })
+    socket.on('greeting', (response, user) => {
+      console.log('anything');
+      setActiveUsers(prevUsers =>[...prevUsers, user])
+      setChatMessages(prevChats =>[...prevChats, response ])
+      audio.play()
+    })
     
   }, [])
 
@@ -241,9 +243,9 @@ const recordButton = <button onClick={handleRecord}>Record here</button>
     <div>
     {/* current time {time} */}
     {greeting}
-    <video style={{border: '3px solid black'}} id='video' srcobject={src}> 
-    </video>
-    {recordButton}
+    {/* <video style={{border: '3px solid black'}} id='video' srcobject={src}>  */}
+    {/* </video> */}
+    {/* {recordButton} */}
     {activeUsersBanner}
     {activeUserList}
     {messageBoard}
