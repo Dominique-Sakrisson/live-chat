@@ -146,11 +146,17 @@ const messages = chatMessages.map(message => {
     style={{
       color: `${msgServerColor}`,
       background: `${msgServerBGColor}`,
-    border: '2px solid black', 
-    width: '80%', 
-    listStyle: 'none',
-    position: "relative",
-   alignSelf: 'flex-start'}}>
+      border: '2px solid black', 
+      borderRadius: '.25rem',
+      width: 'fit-content',
+      maxWidth: '60%',
+      wordWrap: 'break-word',
+      boxSizing: 'content-box',
+      padding: '.5rem',
+      listStyle: 'none',
+      alignSelf: 'flex-start',
+      margin: '.25rem',
+      }}>
     <p style={{fontSize: '120%', fontWeight: 'bold'}}>
       {message}
     </p> 
