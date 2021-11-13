@@ -150,7 +150,7 @@ const messages = chatMessages.map(message => {
     width: '80%', 
     listStyle: 'none',
     position: "relative",
-    left: '40px'}}>
+   alignSelf: 'flex-start'}}>
     <p style={{fontSize: '120%', fontWeight: 'bold'}}>
       {message}
     </p> 

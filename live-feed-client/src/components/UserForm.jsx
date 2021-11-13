@@ -32,7 +32,6 @@ const UserForm = ({onSubmit}) => {
 
     const buttonStyle ={
         textAlign: 'center',
-        width: '40%',
         margin: 'auto',
         padding: '1rem',
         fontSize: '2rem',
