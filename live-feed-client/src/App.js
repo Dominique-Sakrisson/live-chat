@@ -75,21 +75,50 @@ const users = activeUsers.map(user => {
   }
 
 
-const messages = chatMessages.map(message => 
-<li 
+  const messages = chatMessages.map(message => {
+  if(message.owner){
+    if(message.msg === ''){
+      return;
+    }
+    const msgItem = <li 
   key={message+ Math.random() *5} 
   style={{
     border: '2px solid black', 
-    width: '80%', 
+    width: 'fit-content',
+    maxWidth: '60%',
+    wordWrap: 'break-word',
+    boxSizing: 'content-box',
+    padding: '.5rem',
     listStyle: 'none',
-    position: "relative",
-    left: '40px'
+    alignSelf: 'flex-end',
+    margin: '.25rem'
+  }}
+>
+  <p style={{fontSize: '120%', fontWeight: 'bold'}}>
+    {message.msg}
+</p> 
+</li>
+  return msgItem
+
+  }else{
+    const msgItem = <li 
+    key={message+ Math.random() *5} 
+    style={{
+      border: '2px solid black', 
+      width: '80%', 
+      listStyle: 'none',
+      position: "relative",
+      left: '40px'
     }}
 >
   <p style={{fontSize: '120%', fontWeight: 'bold'}}>
     {message}
 </p> 
-</li>)
+</li>
+
+  return msgItem
+}
+})
 
 
 function trackMsgs() {
@@ -98,21 +127,22 @@ function trackMsgs() {
     msgDiv.scrollTop= msgDiv.scrollHeight
   }
 }
-const messageBoard = <div>
-  <p>Landing Room Message board</p>
+const messageBoard = 
   <ul id='messages' style={{
-    overflow: 'scroll', 
-    height: '20rem', 
-    background: 'rgba(50, 230, 140, .8)', 
+    overflow: 'scroll',  
+    background: 'rgba(50, 230, 140, .8)',
+    maxHeight: '20rem', 
     padding: '10px',
-    width: '100%'
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
   }}>
     {messages}
   </ul>
-</div>
+
 
 const messageInputBar = 
-<form style={{display: 'flex', flexDirection: 'row-reverse', justifyContent: 'space-around'}}id="form" >
+<form style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-around'}}id="form" >
   <input 
     id="input" 
     value={msgInput} 
@@ -222,10 +252,9 @@ function handleMsgChange(e){
 
 function handleSubmitMsg(e){
     e.preventDefault();
-    const msgs = [...chatMessages]
-    msgs.push(msgInput)
-    setChatMessages(msgs)
+    setChatMessages(prevMsgs => [...prevMsgs, {msg:msgInput, owner: true}])
     socket.emit('send message', msgInput, socket.id)
+    console.log(chatMessages);
 }
 
 const userForm = <UserForm  onSubmit={onUserSubmit}/>
