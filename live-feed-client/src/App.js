@@ -137,7 +137,8 @@ const messages = chatMessages.map(message => {
       
       <p style={{fontSize: '120%', fontWeight: 'bold'}}>
         {message.msg}
-      </p> 
+      </p>
+      <span style={{fontSize: '.8rem', borderTop: '1px solid black'}}>from {displayName}</span> 
     </li>
   return msgItem
   }
