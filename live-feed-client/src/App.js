@@ -39,12 +39,43 @@ const App = () => {
   const [msgInput, setMsgInput] = useState('')
   const [chatMessages, setChatMessages] = useState([])
   const [audio, setAudio] = useState(new Audio(ping))
-  const [socketMessageBoard, setSocketMessageBoard] = useState();
   const [activeUsers, setActiveUsers] = useState([]);
   const [src, setSrc] = useState('')
   const [roomSocket, setRoomSocket] = useState('')
+  const [recievedSrc, setRecievedSrc]= useState('')
+  const [openRooms, setOpenRooms] = useState([])
+const videoStreamArray= []
+ 
+const roomCountStyle = {
+  borderRadius: '50%',
+  background: 'green',
+  width: 'fit-content',
+  padding: '.25rem',
+  fontWeight: 'bold'
+}
+const roomsList ={
+  display: 'flex',
+  flexDirection: 'row',
+  maxHeight: '5rem',
+  listStyle: 'none',
+  alignItems: 'center',
+  overflowX: 'scroll',
+  overflowY: 'hidden'
+}
+const roomItem= {
+  minHeight: '4.5rem',
+  maxHeight: '4.5rem',
+  wordWrap: 'break-word',
+  margin: '1rem',
+  minWidth: '12rem',
+  padding: '.25rem',
+  textAlign: 'center',
+  background: 'rgba(50, 50, 100, .8)'
+}
+const roomItems = openRooms.map(room => <li style={roomItem}><p>{room.name} <span style={roomCountStyle}>{room.count}</span></p> </li>)
+const openRoomsList = <ul style={roomsList}> <p style={{fontWeight: 'bold'}}>Open Rooms</p>{roomItems}</ul>
   
-  const greeting = () => {
+const greeting = () => {
     if(!openControls){
       return <div>
       <h1> Hello {displayName}</h1>
@@ -204,6 +235,9 @@ const messageInputBar =
     </button>
   </form>
 
+const recievedVideo= <video id='video2' autoPlay srcObject={recievedSrc} 
+style={{border: '3px solid black'}} alt='other users recording'></video>
+
   const openMediaDevices = async () => {
     const devices = await navigator.mediaDevices.getUserMedia(userMediaConstraints)
     return devices
@@ -213,6 +247,7 @@ const messageInputBar =
   }
 
   const onUserSubmit = user => {
+    setRoomToJoin(user.room);
     if(!user.room){
       setRoomToJoin('open chat room')
     }
@@ -228,10 +263,12 @@ const messageInputBar =
     let video = document.getElementById('video')
     video.srcObject = stream;
     const mediaRecorder =  new MediaRecorder(stream)
-    // mediaRecorder.start(5000) 
+    mediaRecorder.start(200) 
     video.play()
     mediaRecorder.ondataavailable = (e) =>{
-    socket.emit('video stream', e.data, roomSocket.id);     
+      console.log(video.srcObject);
+      console.log('oooo');
+    socket.emit('video stream', e.data);     
     }
   }
  
@@ -244,25 +281,45 @@ const messageInputBar =
       }
     })
     
+    socket.on('room updates', roomsData => {
+      setOpenRooms(roomsData);
+    })
+
+
+    //********************** */
+    //having issues here
     socket.on('send video', async function(frameData) {
       const video2 = document.getElementById('video2')
-      // video2.src = url;
-      var playPromise = video2.play();
+      videoStreamArray.push(frameData)
       
-      if (playPromise !== undefined) {
-        playPromise.then(_ => {
-          // Automatic playback started!
-          // Show playing UI.
-        })
-        .catch(error => {
-          // Auto-play was prevented
-          // Show paused UI.
-        });
-      }
+      const frameBlob = new Blob([frameData], {type: 'video/webm;codecs="vp8,opus"'})
+      console.log(frameBlob);
+      const url =  URL.createObjectURL(frameBlob)
+      console.log(url);
+      // console.log(video2);
+      // console.log(frameData);
+
+      // setRecievedSrc(prevSrc => [...prevSrc, frameData])
+      setRecievedSrc(url)
+      
+      // console.log('gfdgsdfgdsg');
+        // video2.src = frameData;
+
+        // var playPromise = video2.play();
+        
+        // if (playPromise !== undefined) {
+        //   playPromise.then(_ => {
+        //     // Automatic playback started!
+        //     // Show playing UI.
+        //   })
+        //   .catch(error => {
+        //     // Auto-play was prevented
+        //     // Show paused UI.
+        //   });
+        // }
     })    
 
     socket.on('update users', users => {
-      console.log(users,' gfgdfg');
       setActiveUsers(users)
     })
     
@@ -272,7 +329,6 @@ const messageInputBar =
     })
 
     socket.on('greeting', (response, user) => {
-      console.log('anything');
       setActiveUsers(prevUsers =>[...prevUsers, user])
       setChatMessages(prevChats =>[...prevChats, response ])
       audio.play()
@@ -312,10 +368,15 @@ const uList = <OnlineUsers />
 const recordButton = <button onClick={handleRecord}>Record here</button>
   return (
     <>
+      {/* always show open rooms */}
+      {openRoomsList}
+    
+
     {/* without a displayname the client needs to submit the sign up form */}
     {(!displayName) ? <>
 
       {userForm}
+      
       {uList}
     </>
 
@@ -323,9 +384,12 @@ const recordButton = <button onClick={handleRecord}>Record here</button>
     <div>
     {/* current time {time} */}
     {greeting()}
-    {/* <video style={{border: '3px solid black'}} id='video' srcobject={src}>  */}
-    {/* </video> */}
-    {/* {recordButton} */}
+    <video style={{border: '3px solid black'}} id='video' srcobject={src}> 
+    </video>
+    {/* <video id='video2' style={{border: '3px solid black'}}> 
+    </video> */}
+    {recievedVideo}
+    {recordButton}
     {activeUsersBanner}
     {activeUserList}
     {messageBoard}

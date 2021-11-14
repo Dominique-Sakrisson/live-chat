@@ -62,9 +62,11 @@ let userProfiles = []
   //custom admin namespace
   // const adminAdapter = io.of('/admin').adapter;
   
+  let roomsData = []
   //listener for anytime a room is created
   mainAdapter.on('create-room', (room) => {
-    // console.log(`room ${room} was created`);
+    console.log(`room ${room} was created`);
+    
   })
   
   // //listener for anytime a room is joined
@@ -81,16 +83,33 @@ let userProfiles = []
     // console.log('connected to openChat namespace');
   // })
   
+  function buildRoomData(roomMap) {
+
+    const roomMapEntries = Array.from(roomMap.entries());
+    
+    const roomsInfo = []
+
+
+    roomMapEntries.forEach(room => {
+      
+      const infoObj = {name: room[0], count: room.length}
+      
+      roomsInfo.push(infoObj)
+    })
+    return roomsInfo;
+  }
+
   io.sockets.on('connection', (socket) => {
-    // console.log('new connection', socket.id);
     const socketCount = io.of('/').sockets.size;
-    // console.log('socket count ', socketCount);
     socket.join('landing')
-    const landingCount = io.of('/landing').sockets.size
-    // console.log('landing count ', landingCount);
-  
     //get all the rooms 
     var clientRooms = io.sockets.adapter.rooms;
+    const roomObj = buildRoomData(clientRooms) 
+    roomObj.map(item => {
+      io.to(item.name).emit('room updates', buildRoomData(clientRooms))
+    })
+    
+  
     //get the room name landing
     const landingRoom = clientRooms.get('landing')
     //returns all the names connected to landing
@@ -103,17 +122,12 @@ let userProfiles = []
     socket.on('send new user', user => {
        //relay the number of remaining users  
        if(!userProfiles.includes(socket.id)){
-         console.log(userProfiles);
-         console.log(socket.id);
          userProfiles.push({
            privateRoom: socket.id,
            currentRoom: user.roomTojoin, 
            username: user.displayName
          })
        }
-      // console.log(userProfiles, 'profiles');
-      
-      // console.log(userProfiles, 'profiles after');
 
       //joins the default room, or the room the client selected 
       socket.join(user.roomToJoin)
@@ -131,18 +145,15 @@ let userProfiles = []
     socket.on('send message', (msg, {id, sender}) => {
       socket.to('landing').emit('chats', msg, {id, sender})
     });
+
+    socket.on('video stream', src => {
+      socket.to('landing').emit('send video', src)
+    })
+
     //on disconnect we want to send client update of current users on the server
     socket.on('disconnect', () => {
-    
-      const socketCount = io.of('/').sockets.size;
-
-console.log('socket count ', socketCount);
   
-      // console.log(socket.id, 'logged out so that  i know what user left');
-      
       //relay the number of remaining users  
-      // const nowUsers = userProfiles.filter(profile => (profile.privateRoom !== socket.id ))
-      
       let nowUsers = [];
       for(let i = 0; i < userProfiles.length; i++){
         if(userProfiles[i].privateRoom != socket.id){
@@ -153,10 +164,8 @@ console.log('socket count ', socketCount);
         io.to('landing').emit('users', landingRoom.size)
       }
 
-      // console.log(nowUsers, 'shows current users after a user has left');
       io.to('landing').emit('update users', nowUsers )
       userProfiles= nowUsers;
-
     });
   });
 // }
