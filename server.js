@@ -7,34 +7,33 @@ const http = require('http').Server(app);
 const {setupMaster, setupWorker} = require('@socket.io/sticky');
 const {createAdapter, setupPrimary} = require('@socket.io/cluster-adapter');
 const { EventEmitter } = require('stream');
-const { createPublicKey } = require('crypto');
 const numCpu = os.cpus().length /2;
 
 let userProfiles = []
 
-// if(cluster.isMaster){
-  // console.log(`Master ${process.pid} running`);
-  // //setup sticky sessions
-  // setupMaster(http, {
-  //   loadBalancingMethod: 'least-connection'
-  // });
-  // //setup connections between different workers
-  // setupPrimary();
-  // cluster.setupMaster({
-  //   serialization: "advanced",
-  // })
+if(cluster.isMaster){
+  console.log(`Master ${process.pid} running`);
+  //setup sticky sessions
+  setupMaster(http, {
+    loadBalancingMethod: 'least-connection'
+  });
+  //setup connections between different workers
+  setupPrimary();
+  cluster.setupMaster({
+    serialization: "advanced",
+  })
   http.listen(port, () => {
     console.log(`Socket.IO server running  on port :${port}/`);
   });
-//   for(let i=0; i < numCpu; i++){
-//     cluster.fork();
-//   }
-//   cluster.on("exit", (worker) => {
-    // console.log(`Worker ${worker.process.pid} died`);
-//     cluster.fork()
-//   })
-// } else{
-  // console.log(`Worker ${process.pid} started`);
+  for(let i=0; i < numCpu; i++){
+    cluster.fork();
+  }
+  cluster.on("exit", (worker) => {
+    console.log(`Worker ${worker.process.pid} died`);
+    cluster.fork()
+  })
+} else{
+  console.log(`Worker ${process.pid} started`);
 
   //create a new socket io server instance
   //pass it the http server already listening on a particular port
@@ -50,7 +49,7 @@ let userProfiles = []
     }
   });
 
-  // io.adapter(createAdapter());
+  io.adapter(createAdapter());
 
 
   //create namespaces and adapters 
@@ -74,7 +73,7 @@ let userProfiles = []
     // console.log(`socket ${id} has joined room: ${room}`);
   })
 
-  // setupWorker(io);
+  setupWorker(io);
 
 
   // const openChatNameSpace = io.of("/openChat")
@@ -104,6 +103,7 @@ let userProfiles = []
     socket.join('landing')
     //get all the rooms 
     var clientRooms = io.sockets.adapter.rooms;
+
     const roomObj = buildRoomData(clientRooms) 
     roomObj.map(item => {
       io.to(item.name).emit('room updates', buildRoomData(clientRooms))
@@ -168,4 +168,4 @@ let userProfiles = []
       userProfiles= nowUsers;
     });
   });
-// }
+}
