@@ -52,7 +52,7 @@ let userProfiles = []
     }
   });
 
-  io.adapter(createAdapter());
+  // io.adapter(createAdapter());
 
 
   //create namespaces and adapters 
