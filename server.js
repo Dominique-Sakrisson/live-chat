@@ -76,7 +76,7 @@ let userProfiles = []
     // console.log(`socket ${id} has joined room: ${room}`);
   })
 
-  setupWorker(io);
+  // setupWorker(io);
 
 
   // const openChatNameSpace = io.of("/openChat")
