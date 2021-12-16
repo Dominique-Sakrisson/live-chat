@@ -4,18 +4,6 @@ import ping from './assets/msgsounds.mp3'
 import OnlineUsers from "./components/OnlineUsers";
 import socket from './service/socket'
 
-
-const peerConnections = {};
-var peerConnection;
-
-const config = {
-  iceServers: [
-    {
-      urls: ["stun:stun.l.google.com:19302"]
-    }
-  ]
-}
-
 const userMediaConstraints = {
   video: {
     // facingMode: getCameraFace(),
@@ -256,126 +244,15 @@ const messageInputBar =
     </button>
   </form>
 
-const recievedVideo= <video id='video2' autoPlay srcObject={recievedSrc} 
-style={{border: '3px solid black'}} alt='other users recording'></video>
 
-const handleRecord = async() => {
-  await videoStream()
-}
-
-const onUserSubmit = user => {
-  setRoomToJoin(user.room);
-  if(!user.room){
-    setRoomToJoin('open chat room')
-  }
-  setDisplayName(user.name)
-}
-
-
-const openMediaDevices = async () => {
-  const devices = await navigator.mediaDevices.getUserMedia(userMediaConstraints)
-  return devices
-}
-
-const video = document.getElementById('video')
-const video2 = document.getElementById('video2')
-
-function connectAddToStream(stream) {
-  createPeerConnection();
-  peerConnection.addStream(stream)
-  return true;
-}
-function createPeerConnection() {
-  try {
-    peerConnection = new RTCPeerConnection();
-    peerConnection.onicecandidate = handleIceCandidate;
-    peerConnection.onaddstream = handleRemoteStreamAdded;
-    peerConnection.onremovestream = handleRemoteStreamRemoved;
-    console.log('Created RTCPeerConnnection');
-    return;
-  } catch (error) {
-    console.log('Failed to create PeerConnection, exception: ' + error.message);
-            alert('Cannot create RTCPeerConnection object.');
-            return;
-  }
-}
-
-function handleIceCandidate(event) {
-  if(event.candidate){
-    //EMIT TO SOCKET
-    socket.emit('ICECandidate', {
-      user: 'landing',
-      rtcMessage: {
-          label: event.candidate.sdpMLineIndex,
-          id: event.candidate.sdpMid,
-          candidate: event.candidate.candidate
-      }
-    })
-} else {
-  console.log('End of candidates.');
-  }
-}
-function handleRemoteStreamAdded(event) {
-  console.log(event, 'line 84937');
-  let remoteStream = event.stream;
-  video2.srcObject = remoteStream;
-}
-
-function handleRemoteStreamRemoved(event) {
-  video2.srcObject = null;
-  video.srcObject = null;
-}
-
-function processCall(userName) {
-  peerConnection.createOffer((sessionDescription) => {
-      peerConnection.setLocalDescription(sessionDescription);
-      
-      //EMIT TO SOCKET
-
-      socket.emit('call', 
-      {name: userName,
-        rtcMessage: sessionDescription})
-     
-  }, (error) => {
-      console.log("Error");
-  });
-}
-
-function processAccept() {
-
-  peerConnection.setRemoteDescription(new RTCSessionDescription(remoteRTCMessage));
-  peerConnection.createAnswer((sessionDescription) => {
-      peerConnection.setLocalDescription(sessionDescription);
-
-      //EMIT TO SOCKET
-      socket.emit('answerCall', {
-        caller: 'landing',
-        rtcMessage: sessionDescription
-    })
-      
-
-  }, (error) => {
-      console.log("Error");
-  })
-}
-
-  const videoStream = async() => {
-    const stream = await openMediaDevices();
-// console.log(stream);
-    setSrc(stream)
-    console.log(src);
-    video.srcObject = stream;
-  
-    // socket.emit('broadcaster')
-    const mediaRecorder =  new MediaRecorder(stream)
-    mediaRecorder.start(200) 
-    video.play()
-    mediaRecorder.ondataavailable = (e) =>{
-    // socket.emit('video stream', e.data);     
-    return connectAddToStream(stream)
+  const onUserSubmit = user => {
+    setRoomToJoin(user.room);
+    if(!user.room){
+      setRoomToJoin('open chat room')
     }
+    setDisplayName(user.name)
   }
- 
+
    useEffect(() => {
     window.onunload = window.onbeforeunload = () => {
       socket.close();
@@ -396,71 +273,7 @@ function processAccept() {
     socket.query = {
           name: displayName
     }
-  
-
-  socket.on('newCall', data => {
-      let otherUser = data.caller;
-      remoteRTCMessage = data.rtcMessage
-
-      //DISPLAY ANSWER SCREEN
-  })
-
-  socket.on('callAnswered', data => {
-    setRemoteRTCMessage(data.rtcMessage);
-      peerConnection.setRemoteDescription(new RTCSessionDescription(remoteRTCMessage));
-
-      // callProgress()
-  })
-
-  socket.on('ICEcandidate', data => {
-      let message = data.rtcMessage
-
-      let candidate = new RTCIceCandidate({
-          sdpMLineIndex: message.label,
-          candidate: message.candidate
-      });
-
-      if (peerConnection) {
-          peerConnection.addIceCandidate(candidate);
-      }
-  })
-
-
-
-
-    // //********************** */
-    // //having issues here
-    // socket.on('send video', async function(frameData) {
-    //   const video2 = document.getElementById('video2')
-    //   videoStreamArray.push(frameData)
-      
-    //   const frameBlob = new Blob([frameData], {type: 'video/webm;codecs="vp8,opus"'})
-    //   console.log(frameBlob);
-    //   const url =  URL.createObjectURL(frameBlob)
-    //   console.log(url);
-    //   // console.log(video2);
-    //   // console.log(frameData);
-
-    //   // setRecievedSrc(prevSrc => [...prevSrc, frameData])
-    //   setRecievedSrc(url)
-      
-    //   // console.log('gfdgsdfgdsg');
-    //     // video2.src = frameData;
-
-    //     // var playPromise = video2.play();
-        
-    //     // if (playPromise !== undefined) {
-    //     //   playPromise.then(_ => {
-    //     //     // Automatic playback started!
-    //     //     // Show playing UI.
-    //     //   })
-    //     //   .catch(error => {
-    //     //     // Auto-play was prevented
-    //     //     // Show paused UI.
-    //     //   });
-    //     // }
-    // })    
-
+ 
     socket.on('update users', users => {
       setActiveUsers(users)
     })
@@ -475,15 +288,11 @@ function processAccept() {
       setChatMessages(prevChats =>[...prevChats, response ])
       audio.play()
     })
-    
   }, [])
 
-  
   useEffect(() => {
     if(displayName){
       socket.emit('send new user', {displayName, roomToJoin})
-      
-   
     }
     return () => {
     }
@@ -509,32 +318,22 @@ function handleSubmitMsg(e){
 
 const userForm = <UserForm  onSubmit={onUserSubmit}/>
 const uList = <OnlineUsers />
-const recordButton = <button onClick={handleRecord}>Record here</button>
+
   return (
     <>
-      {/* always show open rooms */}
-      {openRoomsList}
+    {/* always show open rooms */}
+    {openRoomsList}
     
-
     {/* without a displayname the client needs to submit the sign up form */}
     {(!displayName) ? <>
-
       {userForm}
-      
       {uList}
     </>
-
     :
     <div>
     {/* current time {time} */}
     <h1> Hello {displayName}</h1>
     {greeting()}
-    <video style={{border: '3px solid black'}} id='video' srcobject={src}> 
-    </video>
-    {/* <video id='video2' style={{border: '3px solid black'}}> 
-    </video> */}
-    {recievedVideo}
-    {recordButton}
     {activeUsersBanner}
     {activeUserList}
     {messageBoard}
