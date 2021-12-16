@@ -1,4 +1,5 @@
 const app = require('./index')
+const ws = require('ws')
 const cluster = require('cluster')
 const os = require('os');
 const {Server} = require('socket.io')
@@ -11,6 +12,8 @@ const { createPublicKey } = require('crypto');
 const numCpu = os.cpus().length /2;
 
 let userProfiles = []
+
+// commented out code from lines 18 - 87 implements clusters and the creation of worker processes that will distribute the server load across multiple instances of the server running in separate clusters
 
 // if(cluster.isMaster){
   // console.log(`Master ${process.pid} running`);
@@ -42,7 +45,7 @@ let userProfiles = []
   const io = new Server(http, {
     //allowing access from which domains
     cors: {
-        //    origin: `${backendURL}`,
+          //  origin: `${backendURL}`,
         origin: `https://live-chat-feed.herokuapp.com/`,
         origin: `http://localhost:3000`,
         methods: ['POST', 'GET'],
@@ -117,7 +120,8 @@ let userProfiles = []
 
     //send number of connected clients
     io.to('landing').emit('users', landingRoom.size)
-    
+  
+
     //this gets very slow when more than 2 users are connected
     socket.on('send new user', user => {
        //relay the number of remaining users  
@@ -146,13 +150,50 @@ let userProfiles = []
       socket.to('landing').emit('chats', msg, {id, sender})
     });
 
-    socket.on('video stream', src => {
-      socket.to('landing').emit('send video', src)
+    //event listener for video stream event coming from the client
+    // socket.on('video stream', src => {
+    //   socket.to('landing').emit('send video', src)
+    // })
+
+
+    //beginning of the webRTC  implementation for live video streaming and its related event listeners for the client
+   
+    socket.on('ICECandidate', data => {
+      console.log('000000');
+      let message = data.rtcMessage
+      let candidate = new RTCIceCandidate({
+        sdpMLineIndex: message.label,
+        candidate: message.candidate
+      })
+      if(peerConnection) {
+        peerConnection.addIceCandidate(candidate);
+      }
     })
+
+    socket.on('call', (data) => {
+      console.log('eeeeeeeeeeeeee');
+      let caller = data.name;
+      let rtcMessage = data.rtcMessage;
+
+      socket.to(caller).emit('newCall', {
+        caller: socket.user,
+        rtcMessage: rtcMessage
+      })
+    })
+
+    socket.on('answerCall', (data) => {
+      let caller = data.caller;
+      let rtcMessage = data.rtcMessage;
+      socket.to('landing').emit('callAnswered', {
+        callee:socket.user,
+
+      })
+    })
+
+
 
     //on disconnect we want to send client update of current users on the server
     socket.on('disconnect', () => {
-  
       //relay the number of remaining users  
       let nowUsers = [];
       for(let i = 0; i < userProfiles.length; i++){

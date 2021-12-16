@@ -14,8 +14,8 @@ const UserForm = ({onSubmit}) => {
         padding: '2rem', 
         textAlign: 'center',
         fontSize: '1.3rem',
-        background: 'blue',
-        
+        background: 'rgba(27, 17, 65)',
+        borderRadius: '5rem'
     }
 
     const bigInpu = {
