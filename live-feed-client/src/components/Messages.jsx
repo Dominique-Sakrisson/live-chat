@@ -6,7 +6,6 @@ const Messages = (chatMessages, socket) => {
     
     useEffect(() => {
         if(chatMessages.length > 0){
-
             const messages = chatMessages.map(message => {
                 return <li style={{
                     border: '2px solid black', 
@@ -18,14 +17,9 @@ const Messages = (chatMessages, socket) => {
               </p> 
             </li>
           })
-          console.log(messages);
           setMsgList(messages)
         }
-        
     }, [chatMessages])
-
-
-    
     return (
         ''
     )
