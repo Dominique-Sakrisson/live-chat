@@ -3,6 +3,7 @@ const os = require('os');
 const {Server} = require('socket.io')
 const port = process.env.PORT || 3001;
 const http = require('http').Server(app);
+
 let userProfiles = []
 
 http.listen(port, () => {
@@ -45,6 +46,7 @@ function buildRoomData(roomMap) {
   roomMapEntries.forEach(room => {
     const infoObj = {name: room[0], count: room.length}
     roomsInfo.push(infoObj)
+
   })
   return roomsInfo;
 }
@@ -58,6 +60,7 @@ io.sockets.on('connection', (socket) => {
   roomObj.map(item => {
     io.to(item.name).emit('room updates', buildRoomData(clientRooms))
   })
+
   
   //get the room name landing
   const landingRoom = clientRooms.get('landing')
@@ -99,6 +102,7 @@ io.sockets.on('connection', (socket) => {
     for(let i = 0; i < userProfiles.length; i++){
       if(userProfiles[i].privateRoom != socket.id){
         nowUsers.push(userProfiles[i])
+
       }
     }
     if(landingRoom){

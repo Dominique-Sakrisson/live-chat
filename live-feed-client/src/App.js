@@ -21,7 +21,6 @@ const App = () => {
   const [recievedSrc, setRecievedSrc]= useState('')
   const [openRooms, setOpenRooms] = useState([])
 
- 
 const roomCountStyle = {
   borderRadius: '50%',
   background: 'green',
@@ -128,7 +127,6 @@ const chatBar = {
     margin: '0 auto'
 }
 
-
 const messages = chatMessages.map(message => {
   if(message.owner){
     if(message.msg === ''){
@@ -219,7 +217,6 @@ const messageInputBar =
 
 const recievedVideo= <video id='video2' autoPlay srcObject={recievedSrc} 
 style={{border: '3px solid black'}} alt='other users recording'></video>
-
 
 const onUserSubmit = user => {
   setRoomToJoin(user.room);
