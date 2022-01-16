@@ -4,7 +4,6 @@ const UserForm = ({onSubmit}) => {
     const [name, setName] = useState('')
     const [room, setRoom] = useState('')
   
- 
     const chatBar = {
         color: 'white',
         margin: '2rem auto',
@@ -56,11 +55,8 @@ const UserForm = ({onSubmit}) => {
         color: 'orange',
         fontWeight: 'bold'
     }
-
-
     return(
         <div style={chatBar}>
-
         <form  onSubmit={e => {
             e.preventDefault();
             onSubmit({name, room})}
@@ -68,11 +64,9 @@ const UserForm = ({onSubmit}) => {
             <p>
                 Set your name <br/> and <br/> room to join or create
             </p>
-            
             <input style={bigInpu} type="text" value={name} onChange={e => setName(e.target.value)} placeholder='name'/>
             <input style={noBotMargin} type="text" value={room} onChange={e => setRoom(e.target.value)} placeholder='room'/>
             <p style={hint}>Leave blank for <span style={cool}> messageBoard </span> room</p>
-           
             <button style={buttonStyle} type='submit'>Join / Create Room</button>
         </form>      
         </div>
