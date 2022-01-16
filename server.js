@@ -28,18 +28,17 @@ const io = new Server(http, {
 //main namespace
 const mainAdapter = io.of('/').adapter;
 
-let roomsData = []
 //listener for anytime a room is created
 mainAdapter.on('create-room', (room) => {
   console.log(`room ${room} was created`);
 })
 
-// //listener for anytime a room is joined
+//listener for anytime a room is joined
 mainAdapter.on('join-room', (room, id) => {
   // console.log(`socket ${id} has joined room: ${room}`);
 })
 
-  
+//monitoring and saving of clients connecting to socket server
 function buildRoomData(roomMap) {
   const roomMapEntries = Array.from(roomMap.entries());
   const roomsInfo = []
@@ -49,7 +48,7 @@ function buildRoomData(roomMap) {
   })
   return roomsInfo;
 }
-
+//setup of different socket events, upon new client connections to the socket server
 io.sockets.on('connection', (socket) => {
   const socketCount = io.of('/').sockets.size;
   socket.join('landing')
@@ -92,45 +91,6 @@ io.sockets.on('connection', (socket) => {
     socket.to('landing').emit('chats', msg, {id, sender})
   });
 
-  //event listener for video stream event coming from the client
-  // socket.on('video stream', src => {
-  //   socket.to('landing').emit('send video', src)
-  // })
-
-
-  //beginning of the webRTC  implementation for live video streaming and its related event listeners for the client
-  
-  socket.on('ICECandidate', data => {
-    console.log('000000');
-    let message = data.rtcMessage
-    let candidate = new RTCIceCandidate({
-      sdpMLineIndex: message.label,
-      candidate: message.candidate
-    })
-    if(peerConnection) {
-      peerConnection.addIceCandidate(candidate);
-    }
-  })
-
-  socket.on('call', (data) => {
-    console.log('eeeeeeeeeeeeee');
-    let caller = data.name;
-    let rtcMessage = data.rtcMessage;
-
-    socket.to(caller).emit('newCall', {
-      caller: socket.user,
-      rtcMessage: rtcMessage
-    })
-  })
-
-  socket.on('answerCall', (data) => {
-    let caller = data.caller;
-    let rtcMessage = data.rtcMessage;
-    socket.to('landing').emit('callAnswered', {
-      callee:socket.user,
-
-    })
-  })
 
   //on disconnect we want to send client update of current users on the server
   socket.on('disconnect', () => {
